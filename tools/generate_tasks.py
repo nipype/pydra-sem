@@ -3,12 +3,12 @@
 modules are selected from the hardcoded list below and generated code is placed
 in the cli_modules.py file (and imported in __init__.py). For this to work
 correctly you must have your CLI executabes in $PATH"""
-import xml.dom.minidom
-import subprocess
-import os
-from shutil import rmtree
-
 import keyword
+import os
+import shutil
+import subprocess
+import sys
+import xml.dom.minidom
 
 python_keywords = (
     keyword.kwlist
@@ -75,7 +75,7 @@ def crawl_code_struct(code_struct, package_dir):
                 f_i.close()
                 new_pkg_dir = os.path.join(package_dir, k.lower())
                 if os.path.exists(new_pkg_dir):
-                    rmtree(new_pkg_dir)
+                    shutil.rmtree(new_pkg_dir)
                 os.mkdir(new_pkg_dir)
                 crawl_code_struct(v, new_pkg_dir)
                 if l1:
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
 
 def generate_all_classes(
-    modules_list=[], launcher=[], redirect_x=False, mipav_hacks=False
+    modules_list=[], launcher=[], redirect_x=False, mipav_hacks=False, xml_dir=None
 ):
     """ modules_list contains all the SEM compliant tools that should have wrappers created for them.
         launcher containtains the command line prefix wrapper arugments needed to prepare
@@ -130,7 +130,11 @@ def generate_all_classes(
         print("Generating Definition for module {0}".format(module))
         print("^" * 80)
         package, code, module = generate_class(
-            module, launcher, redirect_x=redirect_x, mipav_hacks=mipav_hacks
+            module,
+            launcher,
+            redirect_x=redirect_x,
+            mipav_hacks=mipav_hacks,
+            xml_dir=xml_dir,
         )
         cur_package = all_code
         module_name = package.strip().split(" ")[0].split(".")[-1]
@@ -147,9 +151,17 @@ def generate_all_classes(
 
 
 def generate_class(
-    module, launcher, strip_module_name_prefix=True, redirect_x=False, mipav_hacks=False
+    module,
+    launcher,
+    strip_module_name_prefix=True,
+    redirect_x=False,
+    mipav_hacks=False,
+    xml_dir=None,
 ):
-    dom = grab_xml(module, launcher, mipav_hacks=mipav_hacks)
+    if xml_dir:
+        dom = dom_from_xml(module, xml_dir)
+    else:
+        dom = dom_from_binary(module, launcher, mipav_hacks=mipav_hacks)
     if strip_module_name_prefix:
         module_name = module.split(".")[-1]
     else:
@@ -444,7 +456,7 @@ def generate_class(
     return category, input_spec_code + output_spec_code + main_class, module_name
 
 
-def grab_xml(module, launcher, mipav_hacks=False):
+def dom_from_binary(module, launcher, mipav_hacks=False):
     #        cmd = CommandLine(command = "Slicer3", args="--launch %s --xml"%module)
     #        ret = cmd.run()
     command_list = launcher[:]  # force copy to preserve original
@@ -488,6 +500,15 @@ def grab_xml(module, launcher, mipav_hacks=False):
 #            return xml.dom.minidom.parseString(ret.runtime.stdout)
 #        else:
 #            raise Exception(cmd.cmdline + " failed:\n%s"%ret.runtime.stderr)
+
+
+def dom_from_xml(module, xml_dir):
+    try:
+        dom = xml.dom.minidom.parse(os.path.join(xml_dir, f"{module}.xml"))
+    except Exception as e:
+        print(os.path.join(xml_dir, f"{module}.xml"))
+        raise e
+    return dom
 
 
 def parse_params(params):
@@ -653,8 +674,21 @@ if __name__ == "__main__":
         "simpleEM",
     ]
 
+    launcher = []
+
+    num_arguments = len(sys.argv) - 1
+
+    if num_arguments == 0:
+        xml_dir = None
+    elif num_arguments == 1:
+        xml_dir = sys.argv[1]
+    else:
+        raise ValueError(
+            f"expected at most 1 argument (xml directory) recieved {num_arguments} arguments"
+        )
+
     # SlicerExecutionModel compliant tools that are usually statically built, and don't need the Slicer3 --launcher
-    generate_all_classes(modules_list=modules_list, launcher=[])
+    generate_all_classes(modules_list=modules_list, launcher=launcher, xml_dir=xml_dir)
     # Tools compliant with SlicerExecutionModel called from the Slicer environment (for shared lib compatibility)
     # launcher = ['/home/raid3/gorgolewski/software/slicer/Slicer', '--launch']
     # generate_all_classes(modules_list=modules_list, launcher=launcher)
