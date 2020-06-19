@@ -1,5 +1,5 @@
 """
->>> import pydra.tasks.TODO
+>>> import pydra.tasks.sem
 """
 from ._version import get_versions
 
