@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Testing</category>
+  <title>Compare Fiducials</title>
+  <description>
+    Compares two .fcsv or .wts text files and verifies that they are identicle.  Used for testing landmarks files.
+  </description>
+  <version>5.2.0</version>
+  <documentation-url> </documentation-url>
+  <license> </license>
+  <contributor>Ali Ghayoor</contributor>
+<acknowledgements>
+</acknowledgements>
+
+  <parameters>
+    <label>IO</label>
+    <description>Input/output parameters</description>
+
+    <file>
+      <name>inputLandmarkFile1</name>
+      <longflag>--inputLandmarkFile1</longflag>
+      <label>First input file</label>
+      <channel>input</channel>
+      <description>First input landmark file (.fcsv or .wts)</description>
+    </file>
+
+    <string-vector>
+      <name>inputLandmarkFile2</name>
+      <longflag>--inputLandmarkFile2</longflag>
+      <label>Second input file</label>
+      <channel>input</channel>
+      <description>Second input landmark file. This can be a vector of baseline file names (.fcsv or .wts)</description>
+    </string-vector>
+
+    <file>
+      <name>weights</name>
+      <longflag>--weights</longflag>
+      <label>Weights file for adjusting weight tolerances</label>
+      <channel>input</channel>
+      <description>Weights on the tolerance to accept ( tolerance  / weights )</description>
+    </file>
+
+    <double>
+      <name>tolerance</name>
+      <longflag>tolerance</longflag>
+      <label>The maximum error (in mm) allowed in each direction of a landmark</label>
+      <description>The maximum error (in mm) allowed in each direction of a landmark</description>
+      <default>0.0001</default>
+    </double>
+
+  </parameters>
+
+</executable>
