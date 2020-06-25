@@ -85,15 +85,16 @@ def force_to_valid_python_variable_name(old_name):
 
 
 def add_class_to_package(class_codes, class_names, module_name, package_dir):
-    module_python_filename = os.path.join(package_dir, "%s.py" % module_name)
-    f_m = open(module_python_filename, "w")
-    f_i = open(os.path.join(package_dir, "__init__.py"), "a+")
-    f_m.write(header)
-    f_m.write(imports)
-    f_m.write("\n\n".join(class_codes))
-    f_i.write("from %s import %s\n" % (module_name, ", ".join(class_names)))
-    f_m.close()
-    f_i.close()
+    with open(os.path.join(package_dir, "__init__.py"), mode="a+") as f:
+        f.write(
+            "from {module_name} import {class_names}\n".format(
+                module_name=module_name, class_names=", ".join(class_names)
+            )
+        )
+    with open(os.path.join(package_dir, f"{module_name}.py"), mode="w") as f:
+        f.write(header)
+        f.write(imports)
+        f.write("\n\n".join(class_codes))
 
 
 def crawl_code_struct(code_struct, package_dir):
@@ -115,9 +116,8 @@ def crawl_code_struct(code_struct, package_dir):
             if l2:
                 v = l2
                 subpackages.append(k.lower())
-                f_i = open(os.path.join(package_dir, "__init__.py"), "a+")
-                f_i.write("from %s import *\n" % k.lower())
-                f_i.close()
+                with open(os.path.join(package_dir, "__init__.py"), mode="a+") as f:
+                    f.write(f"from {k.lower()} import *\n")
                 new_pkg_dir = os.path.join(package_dir, k.lower())
                 if os.path.exists(new_pkg_dir):
                     shutil.rmtree(new_pkg_dir)
@@ -133,19 +133,18 @@ def crawl_code_struct(code_struct, package_dir):
                     list(v.values()), list(v.keys()), module_name, package_dir
                 )
         if subpackages:
-            f = open(os.path.join(package_dir, "setup.py"), "w")
-            f.write(
-                setup.format(
-                    pkg_name=package_dir.split("/")[-1],
-                    sub_pks="\n    ".join(
-                        [
-                            "config.add_data_dir('%s')" % sub_pkg
-                            for sub_pkg in subpackages
-                        ]
-                    ),
+            with open(os.path.join(package_dir, "setup.py"), mode="w") as f:
+                f.write(
+                    setup.format(
+                        pkg_name=package_dir.split("/")[-1],
+                        sub_pks="\n    ".join(
+                            [
+                                f"config.add_data_dir('{sub_pkg}')"
+                                for sub_pkg in subpackages
+                            ]
+                        ),
+                    )
                 )
-            )
-            f.close()
 
 
 def generate_all_classes(
