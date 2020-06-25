@@ -12,10 +12,6 @@ import subprocess
 import sys
 import xml.dom.minidom
 
-python_keywords = (
-    keyword.kwlist
-)  # If c++ SEM module uses one of these key words as a command line parameter, we need to modify variable
-
 header = """\
 # -*- coding: utf-8 -*-
 \"""
@@ -77,11 +73,11 @@ def force_to_valid_python_variable_name(old_name):
     >>> force_to_valid_python_variable_name('inputVolume')
     'inputVolume'
     """
-    new_name = old_name
-    new_name = new_name.lstrip().rstrip()
-    if old_name in python_keywords:
-        new_name = "opt_" + old_name
-    return new_name
+    new_name = old_name.strip()
+    if new_name in keyword.kwlist:
+        return f"opt_{new_name}"
+    else:
+        return new_name
 
 
 def add_class_to_package(class_codes, class_names, module_name, package_dir):
@@ -139,7 +135,7 @@ def crawl_code_struct(code_struct, package_dir):
                         pkg_name=package_dir.split("/")[-1],
                         sub_pks="\n    ".join(
                             [
-                                f"config.add_data_dir('{sub_pkg}')"
+                                f'config.add_data_dir("{sub_pkg}")'
                                 for sub_pkg in subpackages
                             ]
                         ),
@@ -162,7 +158,7 @@ def generate_all_classes(
     all_code = {}
     for module in modules_list:
         print("=" * 80)
-        print("Generating Definition for module {0}".format(module))
+        print(f"Generating Definition for module {module}")
         print("^" * 80)
         package, code, module = generate_class(
             module,
@@ -224,8 +220,8 @@ def generate_class(
     ]:
         el = dom.getElementsByTagName(desc_str)
         if el and el[0].firstChild and el[0].firstChild.nodeValue.strip():
-            docstring += (
-                "    " + desc_str + ": " + el[0].firstChild.nodeValue.strip() + "\n"
+            docstring += "    {desc_str}: {el}\n".format(
+                desc_str=desc_str, el=el[0].firstChild.nodeValue.strip()
             )
         if desc_str == "category":
             category = el[0].firstChild.nodeValue.strip()
@@ -253,14 +249,14 @@ def generate_class(
                 longFlagName = longFlagName.lstrip(" -").rstrip(" ")
                 name = longFlagName
                 name = force_to_valid_python_variable_name(name)
-                traitsParams["argstr"] = "--" + longFlagName + " "
+                traitsParams["argstr"] = f"--{longFlagName} "
             else:
                 name = param.getElementsByTagName("name")[0].firstChild.nodeValue
                 name = force_to_valid_python_variable_name(name)
                 if param.getElementsByTagName("index"):
                     traitsParams["argstr"] = ""
                 else:
-                    traitsParams["argstr"] = "--" + name + " "
+                    traitsParams["argstr"] = f"--{name} "
 
             if (
                 param.getElementsByTagName("description")
@@ -324,7 +320,9 @@ def generate_class(
             if param.nodeName.endswith("-enumeration"):
                 type = "traits.Enum"
                 values = [
-                    '"%s"' % str(el.firstChild.nodeValue).replace('"', "")
+                    '"{value}"'.format(
+                        value=str(el.firstChild.nodeValue).replace('"', "")
+                    )
                     for el in param.getElementsByTagName("element")
                 ]
             elif param.nodeName.endswith("-vector"):
@@ -338,8 +336,9 @@ def generate_class(
                     "table",
                 ]:
                     values = [
-                        "%s(exists=True)"
-                        % typesDict[param.nodeName.replace("-vector", "")]
+                        "{type}(exists=True)".format(
+                            type=typesDict[param.nodeName.replace("-vector", "")]
+                        )
                     ]
                 else:
                     values = [typesDict[param.nodeName.replace("-vector", "")]]
@@ -357,11 +356,14 @@ def generate_class(
                     "transform",
                     "table",
                 ]:
-                    values = ["%s(exists=True)" % typesDict[param.nodeName]]
+                    values = [
+                        "{type}(exists=True)".format(type=typesDict[param.nodeName])
+                    ]
                 elif param.nodeName in ["point", "region"]:
                     values = [
-                        "%s(traits.Float(), minlen=3, maxlen=3)"
-                        % typesDict[param.nodeName]
+                        "{type}(traits.Float(), minlen=3, maxlen=3)".format(
+                            type=typesDict[param.nodeName]
+                        )
                     ]
                 else:
                     values = [typesDict[param.nodeName]]
@@ -390,24 +392,22 @@ def generate_class(
                 ):
                     traitsParams["hash_files"] = False
                     inputTraits.append(
-                        "%s = traits.Either(traits.Bool, %s(%s), %s)"
-                        % (
-                            name,
-                            type,
-                            parse_values(values).replace("exists=True", ""),
-                            parse_params(traitsParams),
+                        "{name} = traits.Either(traits.Bool, {type}({values}), {params})".format(
+                            name=name,
+                            type=type,
+                            values=parse_values(values).replace("exists=True", ""),
+                            params=parse_params(traitsParams),
                         )
                     )
                     traitsParams["exists"] = True
                     traitsParams.pop("argstr")
                     traitsParams.pop("hash_files")
                     outputTraits.append(
-                        "%s = %s(%s%s)"
-                        % (
-                            name,
-                            type.replace("Input", "Output"),
-                            parse_values(values),
-                            parse_params(traitsParams),
+                        "{name} = {type}({values}{params})".format(
+                            name=name,
+                            type=type.replace("Input", "Output"),
+                            values=parse_values(values),
+                            params=parse_params(traitsParams),
                         )
                     )
 
@@ -426,8 +426,12 @@ def generate_class(
                     ] and type not in ["InputMultiPath", "traits.List"]:
                         traitsParams["exists"] = True
                     inputTraits.append(
-                        "%s = %s(%s%s)"
-                        % (name, type, parse_values(values), parse_params(traitsParams))
+                        "{name} = {type}({values}{params})".format(
+                            name=name,
+                            type=type,
+                            values=parse_values(values),
+                            params=parse_params(traitsParams),
+                        )
                     )
                 else:
                     raise RuntimeError(
@@ -437,8 +441,12 @@ def generate_class(
                     )
             else:  # For all other parameter types, they are implicitly only input types
                 inputTraits.append(
-                    "%s = %s(%s%s)"
-                    % (name, type, parse_values(values), parse_params(traitsParams))
+                    "{name} = {type}({values}{params})".format(
+                        name=name,
+                        type=type,
+                        values=parse_values(values),
+                        params=parse_params(traitsParams),
+                    )
                 )
 
     if mipav_hacks:
@@ -465,7 +473,7 @@ def generate_class(
             output_spec_code += f"    {trait}\n"
 
     output_filenames = ",".join(
-        ["'%s':'%s'" % (key, value) for key, value in outputs_filenames.items()]
+        [f'"{key}":"{value}"' for key, value in outputs_filenames.items()]
     )
 
     main_class = template.format(
@@ -503,7 +511,7 @@ def dom_from_binary(module, launcher, mipav_hacks=False):
                 new_xml += "</file-vector>\n"
                 replace_closing_tag = False
             else:
-                new_xml += line + "\n"
+                new_xml += f"{line}\n"
 
         xmlReturnValue = new_xml
 
@@ -541,20 +549,21 @@ def parse_params(params):
     list = []
     for key, value in params.items():
         if isinstance(value, (str, bytes)):
-            list.append('%s="%s"' % (key, value.replace('"', "'")))
+            list.append(
+                '{key}="{value}"'.format(key=key, value=value.replace('"', "'"))
+            )
         else:
-            list.append("%s=%s" % (key, value))
+            list.append(f"{key}={value}")
 
     return ", ".join(list)
 
 
 def parse_values(values):
-    values = ["%s" % value for value in values]
+    values = [f"{value}" for value in values]
     if len(values) > 0:
-        retstr = ", ".join(values) + ", "
+        return ", ".join(values) + ", "
     else:
-        retstr = ""
-    return retstr
+        return ""
 
 
 def gen_filename_from_param(param, base):
