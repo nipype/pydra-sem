@@ -54,7 +54,7 @@ import os\n\n\n"""
 def crawl_code_struct(code_struct, package_dir):
     subpackages = []
     for k, v in code_struct.items():
-        if isinstance(v, str) or isinstance(v, (str, bytes)):
+        if isinstance(v, (str, bytes)):
             module_name = k.lower()
             class_name = k
             class_code = v
@@ -63,7 +63,7 @@ def crawl_code_struct(code_struct, package_dir):
             l1 = {}
             l2 = {}
             for key in list(v.keys()):
-                if isinstance(v[key], str) or isinstance(v[key], (str, bytes)):
+                if isinstance(v[key], (str, bytes)):
                     l1[key] = v[key]
                 else:
                     l2[key] = v[key]
@@ -118,7 +118,12 @@ if __name__ == '__main__':
 
 
 def generate_all_classes(
-    modules_list=[], launcher=[], redirect_x=False, mipav_hacks=False, xml_dir=None
+    modules_list=[],
+    launcher=[],
+    redirect_x=False,
+    mipav_hacks=False,
+    xml_dir=None,
+    output_dir=None,
 ):
     """ modules_list contains all the SEM compliant tools that should have wrappers created for them.
         launcher containtains the command line prefix wrapper arugments needed to prepare
@@ -145,9 +150,12 @@ def generate_all_classes(
         if module_name not in cur_package:
             cur_package[module_name] = {}
         cur_package[module_name][module] = code
-    if os.path.exists("__init__.py"):
-        os.unlink("__init__.py")
-    crawl_code_struct(all_code, os.getcwd())
+    package_dir = output_dir if output_dir else os.getcwd()
+    if not os.path.exists(package_dir):
+        os.makedirs(package_dir)
+    if os.path.exists(os.path.join(package_dir, "__init__.py")):
+        os.unlink(os.path.join(package_dir, "__init__.py"))
+    crawl_code_struct(all_code, package_dir)
 
 
 def generate_class(
@@ -676,19 +684,23 @@ if __name__ == "__main__":
 
     launcher = []
 
-    num_arguments = len(sys.argv) - 1
+    arguments = sys.argv[1:]
+    num_arguments = len(arguments)
 
-    if num_arguments == 0:
-        xml_dir = None
-    elif num_arguments == 1:
-        xml_dir = sys.argv[1]
+    if num_arguments <= 2:
+        output_dir, xml_dir = arguments + [None] * (2 - num_arguments)
     else:
         raise ValueError(
-            f"expected at most 1 argument (xml directory) recieved {num_arguments} arguments"
+            f"expected at most 2 arguments [output directory, xml directory], received {num_arguments} arguments: {arguments}"
         )
 
     # SlicerExecutionModel compliant tools that are usually statically built, and don't need the Slicer3 --launcher
-    generate_all_classes(modules_list=modules_list, launcher=launcher, xml_dir=xml_dir)
+    generate_all_classes(
+        modules_list=modules_list,
+        launcher=launcher,
+        xml_dir=xml_dir,
+        output_dir=output_dir,
+    )
     # Tools compliant with SlicerExecutionModel called from the Slicer environment (for shared lib compatibility)
     # launcher = ['/home/raid3/gorgolewski/software/slicer/Slicer', '--launch']
     # generate_all_classes(modules_list=modules_list, launcher=launcher)
