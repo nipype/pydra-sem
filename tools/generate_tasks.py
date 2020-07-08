@@ -182,6 +182,7 @@ def generate_all_classes(
     if os.path.exists(os.path.join(package_dir, "__init__.py")):
         os.unlink(os.path.join(package_dir, "__init__.py"))
     crawl_code_struct(all_code, package_dir)
+    os.system(f"black {package_dir}")
 
 
 def generate_class(
