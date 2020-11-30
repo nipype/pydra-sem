@@ -23,7 +23,8 @@ imports = """\
 import attr
 from nipype.interfaces.base import Directory, File, InputMultiPath, OutputMultiPath, traits
 from pydra import ShellCommandTask
-from pydra.engine.specs import SpecInfo, ShellSpec\n\n
+from pydra.engine.specs import SpecInfo, ShellSpec
+import pydra\n\n
 """
 
 setup = """\
@@ -55,7 +56,7 @@ class {module_name}():
     output_fields = [{output_fields}]
 
     input_spec = SpecInfo(name="Input", fields=input_fields, bases=(ShellSpec,))
-    output_spec = SpecInfo(name="Output", fields=output_fields, bases=(ShellSpec,))
+    output_spec = SpecInfo(name="Output", fields=output_fields, bases=(pydra.specs.ShellOutSpec,))
 
     task = ShellCommandTask(
         name="{module_name}",
@@ -308,14 +309,14 @@ def generate_class(
                 "integer": "traits.Int",
                 "double": "traits.Float",
                 "float": "traits.Float",
-                "image": "File",
-                "transform": "File",
+                "image": "pydra.specs.File",
+                "transform": "pydra.specs.File",
                 "boolean": "traits.Bool",
                 "string": "traits.Str",
-                "file": "File",
-                "geometry": "File",
+                "file": "pydra.specs.File",
+                "geometry": "pydra.specs.File",
                 "directory": "Directory",
-                "table": "File",
+                "table": "pydra.specs.File",
                 "point": "traits.List",
                 "region": "traits.List",
             }
@@ -401,7 +402,8 @@ def generate_class(
                     )
                     # traitsParams["exists"] = True
                     traitsParams.pop("argstr")
-                    # traitsParams.pop("hash_files")
+                    traitsParams["output_file_template"] = f"{{{name}}}_out".replace("output", "input")
+ 		    # traitsParams.pop("hash_files")
                     outputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
                             name=name,
@@ -601,7 +603,7 @@ if __name__ == "__main__":
         # "BRAINSMush",
         # "BRAINSPosteriorToContinuousClass",
         # "BRAINSROIAuto",
-        # "BRAINSResample",
+         "BRAINSResample",
         # "BRAINSResize",
         # "BRAINSSnapShotWriter",
         # "BRAINSStripRotation",
