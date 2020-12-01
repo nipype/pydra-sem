@@ -402,7 +402,7 @@ def generate_class(
                     )
                     # traitsParams["exists"] = True
                     traitsParams.pop("argstr")
-                    traitsParams["output_file_template"] = f"{{{name}}}_{module_name}".replace("output", "input")
+                    traitsParams["output_file_template"] = f"{{{name}}}"
  		    # traitsParams.pop("hash_files")
                     outputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
