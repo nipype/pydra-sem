@@ -309,14 +309,14 @@ def generate_class(
                 "integer": "traits.Int",
                 "double": "traits.Float",
                 "float": "traits.Float",
-                "image": "pydra.specs.File",
-                "transform": "pydra.specs.File",
+                "image": "File",
+                "transform": "File",
                 "boolean": "traits.Bool",
                 "string": "traits.Str",
-                "file": "pydra.specs.File",
-                "geometry": "pydra.specs.File",
+                "file": "File",
+                "geometry": "File",
                 "directory": "Directory",
-                "table": "pydra.specs.File",
+                "table": "File",
                 "point": "traits.List",
                 "region": "traits.List",
             }
@@ -402,12 +402,12 @@ def generate_class(
                     )
                     # traitsParams["exists"] = True
                     traitsParams.pop("argstr")
-                    traitsParams["output_file_template"] = f"{{{name}}}_out".replace("output", "input")
+                    traitsParams["output_file_template"] = f"{{{name}}}_{module_name}".replace("output", "input")
  		    # traitsParams.pop("hash_files")
                     outputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
                             name=name,
-                            type=type.replace("Input", "Output"),
+                            type=f'pydra.specs.{type.replace("Input", "Output")}',
                             params=parse_params(traitsParams),
                         )
                     )
