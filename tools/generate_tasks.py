@@ -408,7 +408,7 @@ def generate_class(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
                             name=name,
                             type=f'pydra.specs.{type.replace("Input", "Output")}',
-                            params=parse_params(traitsParams),
+			    params=parse_params(traitsParams),
                         )
                     )
 
