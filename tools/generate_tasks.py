@@ -48,22 +48,25 @@ if __name__ == "__main__":
 
 template = """\
 class {module_name}():
+    def __init__(self, name="{module_name}"):
+        self.name = name
     \"""
 {docstring}\
     \"""
+    def get_task(self):
+        input_fields = [{input_fields}]
+        output_fields = [{output_fields}]
 
-    input_fields = [{input_fields}]
-    output_fields = [{output_fields}]
+        input_spec = SpecInfo(name="Input", fields=input_fields, bases=(ShellSpec,))
+        output_spec = SpecInfo(name="Output", fields=output_fields, bases=(pydra.specs.ShellOutSpec,))
 
-    input_spec = SpecInfo(name="Input", fields=input_fields, bases=(ShellSpec,))
-    output_spec = SpecInfo(name="Output", fields=output_fields, bases=(pydra.specs.ShellOutSpec,))
-
-    task = ShellCommandTask(
-        name="{module_name}",
-        executable="{launcher}{module}",
-        input_spec=input_spec,
-        output_spec=output_spec,
-    )
+        task = ShellCommandTask(
+            name=self.name,
+            executable="{launcher}{module}",
+            input_spec=input_spec,
+            output_spec=output_spec,
+        )
+        return task
 """
 
 
