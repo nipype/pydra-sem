@@ -23,7 +23,7 @@ imports = """\
 import attr
 from nipype.interfaces.base import Directory, File, InputMultiPath, OutputMultiPath, traits
 from pydra import ShellCommandTask
-from pydra.engine.specs import SpecInfo, ShellSpec
+from pydra.engine.specs import SpecInfo, ShellSpec, MultiInputFile, MultiOutputFile
 import pydra\n\n
 """
 
@@ -48,8 +48,9 @@ if __name__ == "__main__":
 
 template = """\
 class {module_name}():
-    def __init__(self, name="{module_name}"):
+    def __init__(self, name="{module_name}", executable="{launcher}{module}"):
         self.name = name
+        self.executable = executable
     \"""
 {docstring}\
     \"""
@@ -62,7 +63,7 @@ class {module_name}():
 
         task = ShellCommandTask(
             name=self.name,
-            executable="{launcher}{module}",
+            executable=self.executable,
             input_spec=input_spec,
             output_spec=output_spec,
         )
@@ -274,6 +275,8 @@ def generate_class(
                     .firstChild.nodeValue.replace('"', '\\"')
                     .replace("\n", ", ")
                 )
+            else:
+                traitsParams["help_string"] = ""
 
             # argsDict = {
             #     "directory": "%s",
@@ -333,7 +336,7 @@ def generate_class(
                     for el in param.getElementsByTagName("element")
                 ]
             elif param.nodeName.endswith("-vector"):
-                type = "InputMultiPath"
+                type = "MultiInputFile"
                 if param.nodeName in [
                     "file",
                     "directory",
@@ -354,7 +357,7 @@ def generate_class(
                 else:
                     traitsParams["sep"] = ","
             elif param.getAttribute("multiple") == "true":
-                type = "InputMultiPath"
+                type = "MultiInputFile"
                 if param.nodeName in [
                     "file",
                     "directory",
@@ -584,7 +587,7 @@ if __name__ == "__main__":
     modules_list = [
         # "ACPCTransform",
         # "AddScalarVolumes",
-        # "BRAINSABC",
+        "BRAINSABC",
         # "BRAINSAlignMSP",
         # "BRAINSCleanMask",
         # "BRAINSClipInferior",
@@ -592,21 +595,21 @@ if __name__ == "__main__":
         # "BRAINSConstellationDetectorGUI",
         # "BRAINSConstellationLandmarksTransform",
         # "BRAINSConstellationModeler",
-        # "BRAINSCreateLabelMapFromProbabilityMaps",
+        "BRAINSCreateLabelMapFromProbabilityMaps",
         # "BRAINSDWICleanup",
         # "BRAINSEyeDetector",
         # "BRAINSFit",
         # "BRAINSInitializedControlPoints",
         # "BRAINSLabelStats",
-        # "BRAINSLandmarkInitializer",
+        "BRAINSLandmarkInitializer",
         # "BRAINSLinearModelerEPCA",
         # "BRAINSLmkTransform",
         # "BRAINSMultiModeSegment",
         # "BRAINSMultiSTAPLE",
         # "BRAINSMush",
         # "BRAINSPosteriorToContinuousClass",
-        # "BRAINSROIAuto",
-         "BRAINSResample",
+        "BRAINSROIAuto",
+        "BRAINSResample",
         # "BRAINSResize",
         # "BRAINSSnapShotWriter",
         # "BRAINSStripRotation",
