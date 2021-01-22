@@ -278,6 +278,8 @@ def generate_class(
             else:
                 traitsParams["help_string"] = ""
 
+
+
             # argsDict = {
             #     "directory": "%s",
             #     "file": "%s",
@@ -310,6 +312,7 @@ def generate_class(
             desc = param.getElementsByTagName("description")
             if index:
                 traitsParams["help_string"] = desc[0].firstChild.nodeValue
+
 
             typesDict = {
                 "integer": "traits.Int",
