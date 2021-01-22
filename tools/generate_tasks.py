@@ -403,6 +403,7 @@ def generate_class(
                     param.getElementsByTagName("channel")[0].firstChild.nodeValue
                     == "output"
                 ):
+                    type = type.replace("Input", "Output")
                     # traitsParams["hash_files"] = False
                     inputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
@@ -416,7 +417,7 @@ def generate_class(
                     outputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
                             name=name,
-                            type=f'pydra.specs.{type.replace("Input", "Output")}',
+                            type=f'pydra.specs.{type}',
 			    params=parse_params(traitsParams),
                         )
                     )
