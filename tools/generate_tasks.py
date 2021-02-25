@@ -23,7 +23,7 @@ imports = """\
 import attr
 from nipype.interfaces.base import Directory, File, InputMultiPath, OutputMultiPath, traits
 from pydra import ShellCommandTask
-from pydra.engine.specs import SpecInfo, ShellSpec, MultiInputFile, MultiOutputFile
+from pydra.engine.specs import SpecInfo, ShellSpec, MultiInputFile, MultiOutputFile, MultiInputObj
 import pydra\n\n
 """
 
@@ -339,7 +339,7 @@ def generate_class(
                     for el in param.getElementsByTagName("element")
                 ]
             elif param.nodeName.endswith("-vector"):
-                type = "MultiInputFile"
+                type = "MultiInputObj"
                 if param.nodeName in [
                     "file",
                     "directory",
@@ -360,7 +360,8 @@ def generate_class(
                 else:
                     traitsParams["sep"] = ","
             elif param.getAttribute("multiple") == "true":
-                type = "MultiInputFile"
+                # type = "MultiInputFile"
+                type = "File"
                 if param.nodeName in [
                     "file",
                     "directory",
@@ -380,7 +381,7 @@ def generate_class(
                     ]
                 else:
                     values = [typesDict[param.nodeName]]
-                traitsParams["argstr"] += "..."
+                # traitsParams["argstr"] += "..."
             else:
                 values = []
                 type = typesDict[param.nodeName]
