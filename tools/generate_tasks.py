@@ -359,9 +359,9 @@ def generate_class(
                     traitsParams["sep"] = ";"
                 else:
                     traitsParams["sep"] = ","
-            elif param.getAttribute("multiple") == "true":
-                # type = "MultiInputFile"
-                type = "File"
+            elif param.getAttribute("multiple") == "true" and "input" not in name and "output" not in name:
+                type = "MultiInputFile"
+                # type = "File"
                 if param.nodeName in [
                     "file",
                     "directory",
@@ -381,6 +381,7 @@ def generate_class(
                     ]
                 else:
                     values = [typesDict[param.nodeName]]
+                traitsParams["sep"] = ","
                 # traitsParams["argstr"] += "..."
             else:
                 values = []
