@@ -1,4 +1,3 @@
-
 """
 This script generates Slicer Interfaces based on the CLI modules XML. CLI
 modules are selected from the hardcoded list below and generated code is placed
@@ -48,9 +47,10 @@ if __name__ == "__main__":
 
 template = """\
 class {module_name}():
-    def __init__(self, name="{module_name}", executable="{launcher}{module}"):
+    def __init__(self, name="{module_name}", executable="{launcher}{module}", cache_dir=None):
         self.name = name
         self.executable = executable
+        self.cache_dir = cache_dir
     \"""
 {docstring}\
     \"""
@@ -66,13 +66,14 @@ class {module_name}():
             executable=self.executable,
             input_spec=input_spec,
             output_spec=output_spec,
+            cache_dir=self.cache_dir
         )
         return task
 """
 
 
 def force_to_valid_python_variable_name(old_name):
-    """  Valid c++ names are not always valid in python, so
+    """Valid c++ names are not always valid in python, so
     provide alternate naming
 
     >>> force_to_valid_python_variable_name('lambda')
@@ -158,9 +159,9 @@ def generate_all_classes(
     xml_dir=None,
     output_dir=None,
 ):
-    """ modules_list contains all the SEM compliant tools that should have wrappers created for them.
-        launcher contains the command line prefix wrapper arguments needed to prepare
-        a proper environment for each of the modules.
+    """modules_list contains all the SEM compliant tools that should have wrappers created for them.
+    launcher contains the command line prefix wrapper arguments needed to prepare
+    a proper environment for each of the modules.
     """
     all_code = {}
     for module in modules_list:
@@ -278,8 +279,6 @@ def generate_class(
             else:
                 traitsParams["help_string"] = ""
 
-
-
             # argsDict = {
             #     "directory": "%s",
             #     "file": "%s",
@@ -312,7 +311,6 @@ def generate_class(
             desc = param.getElementsByTagName("description")
             if index:
                 traitsParams["help_string"] = desc[0].firstChild.nodeValue
-
 
             typesDict = {
                 "integer": "traits.Int",
@@ -359,7 +357,11 @@ def generate_class(
                     traitsParams["sep"] = ";"
                 else:
                     traitsParams["sep"] = ","
-            elif param.getAttribute("multiple") == "true" and "input" not in name and "output" not in name:
+            elif (
+                param.getAttribute("multiple") == "true"
+                and "input" not in name
+                and "output" not in name
+            ):
                 type = "MultiInputFile"
                 # type = "File"
                 if param.nodeName in [
@@ -415,12 +417,12 @@ def generate_class(
                     # traitsParams["exists"] = True
                     traitsParams.pop("argstr")
                     traitsParams["output_file_template"] = f"{{{name}}}"
- 		    # traitsParams.pop("hash_files")
+                    # traitsParams.pop("hash_files")
                     outputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
                             name=name,
-                            type=f'pydra.specs.{type}',
-			    params=parse_params(traitsParams),
+                            type=f"pydra.specs.{type}",
+                            params=parse_params(traitsParams),
                         )
                     )
 
@@ -437,7 +439,7 @@ def generate_class(
                     #     "transform",
                     #     "table",
                     # ] and type not in ["InputMultiPath", "traits.List"]:
-                        # traitsParams["exists"] = True
+                    # traitsParams["exists"] = True
                     inputTraits.append(
                         '("{name}", attr.ib(type={type}, metadata={{{params}}}))'.format(
                             name=name, type=type, params=parse_params(traitsParams)
