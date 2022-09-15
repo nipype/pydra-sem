@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Utilities.BRAINS</category>
+  <title>BRAINSLandmarkInitializer</title>
+  <description>Create transformation file (*.h5) from a pair of landmarks (*fcsv) files.</description>
+  <version>5.2.0</version>
+  <documentation-url></documentation-url>
+  <license>https://www.nitrc.org/svn/brains/BuildScripts/trunk/License.txt</license>
+  <contributor>Eunyoung Regina Kim, Ali Ghayoor, and Hans J. Johnson</contributor>
+  <acknowledgements>SINAPSE Lab</acknowledgements>
+ <parameters>
+   <file fileExtensions=".fcsv">
+     <name>inputFixedLandmarkFilename</name>
+     <longflag>inputFixedLandmarkFilename</longflag>
+     <label>input fixed landmark filename</label>
+     <channel>input</channel>
+     <description>input landmarks from fixed image *.fcsv</description>
+     <default></default>
+   </file>
+
+   <file fileExtensions=".fcsv">
+     <name>inputMovingLandmarkFilename</name>
+     <longflag>inputMovingLandmarkFilename</longflag>
+     <label>input moving landmark filename</label>
+     <channel>input</channel>
+     <description>input landmarks from moving image *.fcsv</description>
+     <default></default>
+   </file>
+
+   <file fileExtensions=".wts">
+     <name>inputWeightFilename</name>
+     <longflag>inputWeightFilename</longflag>
+     <label>weight file name</label>
+     <channel>input</channel>
+     <description>Input weight file name for landmarks. Higher weighted landmark will be considered more heavily. Weights are propotional, that is the magnitude of weights will be normalized by its minimum and maximum value. </description>
+     <default></default>
+   </file>
+
+   <transform fileExtensions=".h5,.hdf5,.mat,.txt">
+     <name>outputTransformFilename</name>
+     <longflag>outputTransformFilename</longflag>
+     <label>output Transform file name</label>
+     <channel>output</channel>
+     <description>output transform file name (ex: ./moving2fixed.h5) that is appropriate for applying to the moving image to align with the fixed image.  The _Inverse file is also written that is approporate for placing the moving Landmarks with the fixed image. </description>
+     <default></default>
+   </transform>
+
+   <string-enumeration>
+     <name>outputTransformType</name>
+     <longflag>outputTransformType</longflag>
+     <channel>input</channel>
+     <description>The target transformation type. </description>
+     <default>AffineTransform</default>
+     <element>AffineTransform</element>
+     <!-- NOT Ready for implementation, only paritally implemented
+     <element>Similarity3DTransform</element>
+     -->
+     <element>VersorRigid3DTransform</element>
+     <element>BSplineTransform</element>
+
+   </string-enumeration>
+
+   <image>
+     <name>inputReferenceImageFilename</name>
+     <label>Reference image</label>
+     <longflag>inputReferenceImageFilename</longflag>
+     <description>Set the reference image to define the parametric domain for the BSpline transform. </description>
+     <channel>input</channel>
+   </image>
+
+   <integer>
+     <name>bsplineNumberOfControlPoints</name>
+     <label>Number of control points for the BSpline transform</label>
+     <longflag>bsplineNumberOfControlPoints</longflag>
+     <description>Set the number of control points to define the parametric domain for the BSpline transform. </description>
+     <channel>input</channel>
+     <default>8</default>
+   </integer>
+
+</parameters>
+</executable>
